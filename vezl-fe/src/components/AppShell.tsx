@@ -57,7 +57,8 @@ export function AppShell() {
       {/* Sidebar */}
       <aside className="w-60 shrink-0 flex flex-col bg-canvas border-r border-border">
         {/* Logo */}
-        <div className="px-4 py-5 border-b border-border-subtle">
+        <div className="px-4 py-5 border-b border-border-subtle flex items-center gap-2.5">
+          <img src="/vezl.png" alt="vezl" className="w-7 h-7 rounded-md" />
           <span className="text-lg font-semibold text-text-primary tracking-tight">vezl</span>
         </div>
 
