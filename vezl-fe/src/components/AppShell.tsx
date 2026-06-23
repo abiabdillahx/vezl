@@ -35,10 +35,10 @@ const LOGOUT_ICON = (
 );
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative
+  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
   ${isActive
-    ? "bg-accent-subtle text-text-primary border-l-2 border-accent pl-[10px]"
-    : "text-text-secondary hover:text-text-primary hover:bg-surface-raised border-l-2 border-transparent pl-[10px]"
+    ? "bg-accent-subtle text-text-primary border border-accent/40"
+    : "text-text-secondary hover:text-text-primary hover:bg-surface-raised border border-transparent"
   }`;
 
 export function AppShell() {
