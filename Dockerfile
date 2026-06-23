@@ -1,5 +1,7 @@
 # Stage 1: Build FE
 FROM --platform=linux/amd64 node:22-alpine AS fe-builder
+ARG SITE_URL
+ENV VITE_SITE_URL=$SITE_URL
 WORKDIR /app/vezl-fe
 COPY vezl-fe/package*.json ./
 RUN npm ci
