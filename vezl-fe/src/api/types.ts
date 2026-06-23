@@ -21,6 +21,7 @@ export interface URL {
   utm: Record<string, string>;
   created_at: string;
   updated_at: string;
+  created_by?: string;
 }
 
 export interface Metric {

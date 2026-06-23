@@ -1,13 +1,26 @@
 import type { URL } from "@/api/types";
 
-function isExpiringSoon(expiresAt: string | null): boolean {
-  if (!expiresAt) return false;
-  return new Date(expiresAt).getTime() - Date.now() < 24 * 60 * 60 * 1000;
+function extractDateStr(val: unknown): string | null {
+  if (val == null) return null;
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && val !== null) {
+    const obj = val as Record<string, unknown>;
+    if ("Valid" in obj && !obj.Valid) return null;
+    if ("Time" in obj && typeof obj.Time === "string") return obj.Time;
+  }
+  return null;
 }
 
-function isExpired(expiresAt: string | null): boolean {
-  if (!expiresAt) return false;
-  return new Date(expiresAt) < new Date();
+function isExpiringSoon(expiresAt: unknown): boolean {
+  const s = extractDateStr(expiresAt);
+  if (!s) return false;
+  return new Date(s).getTime() - Date.now() < 24 * 60 * 60 * 1000;
+}
+
+function isExpired(expiresAt: unknown): boolean {
+  const s = extractDateStr(expiresAt);
+  if (!s) return false;
+  return new Date(s) < new Date();
 }
 
 export function StatusChip({ url }: { url: URL }) {
@@ -81,9 +94,10 @@ export function relativeTime(dateStr: string): string {
   return `${d}d ago`;
 }
 
-export function expiryDisplay(expiresAt: string | null): string {
-  if (!expiresAt) return "—";
-  const diff = new Date(expiresAt).getTime() - Date.now();
+export function expiryDisplay(expiresAt: unknown): string {
+  const s = extractDateStr(expiresAt);
+  if (!s) return "—";
+  const diff = new Date(s).getTime() - Date.now();
   if (diff <= 0) return "Expired";
   const h = Math.floor(diff / 3600000);
   if (h < 24) return `${h}h`;

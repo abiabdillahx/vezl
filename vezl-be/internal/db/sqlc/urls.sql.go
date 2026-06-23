@@ -9,6 +9,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 )
 
 const countAllURLs = `-- name: CountAllURLs :one
@@ -184,6 +185,72 @@ func (q *Queries) ListAllURLs(ctx context.Context, arg ListAllURLsParams) ([]Url
 			&i.Utm,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAllURLsWithUser = `-- name: ListAllURLsWithUser :many
+SELECT urls.id, urls.user_id, urls.shortcode, urls.original_url, urls.notes, urls.secret, urls.active, urls.hit, urls.hit_limit, urls.expires_at, urls.utm, urls.created_at, urls.updated_at, users.username AS created_by FROM urls
+JOIN users ON urls.user_id = users.id
+ORDER BY urls.created_at DESC LIMIT $1 OFFSET $2
+`
+
+type ListAllURLsWithUserParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type ListAllURLsWithUserRow struct {
+	ID          string          `json:"id"`
+	UserID      string          `json:"user_id"`
+	Shortcode   string          `json:"shortcode"`
+	OriginalUrl string          `json:"original_url"`
+	Notes       sql.NullString  `json:"notes"`
+	Secret      sql.NullString  `json:"secret"`
+	Active      bool            `json:"active"`
+	Hit         int32           `json:"hit"`
+	HitLimit    int32           `json:"hit_limit"`
+	ExpiresAt   sql.NullTime    `json:"expires_at"`
+	Utm         json.RawMessage `json:"utm"`
+	CreatedAt   time.Time       `json:"created_at"`
+	UpdatedAt   time.Time       `json:"updated_at"`
+	CreatedBy   string          `json:"created_by"`
+}
+
+func (q *Queries) ListAllURLsWithUser(ctx context.Context, arg ListAllURLsWithUserParams) ([]ListAllURLsWithUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, listAllURLsWithUser, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAllURLsWithUserRow
+	for rows.Next() {
+		var i ListAllURLsWithUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Shortcode,
+			&i.OriginalUrl,
+			&i.Notes,
+			&i.Secret,
+			&i.Active,
+			&i.Hit,
+			&i.HitLimit,
+			&i.ExpiresAt,
+			&i.Utm,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CreatedBy,
 		); err != nil {
 			return nil, err
 		}

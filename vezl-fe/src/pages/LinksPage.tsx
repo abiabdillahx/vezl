@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, Spinner, Tooltip } from "@heroui/react";
 import { urlsApi } from "@/api/client";
+import { useAuth } from "@/contexts/AuthContext";
 import type { URL as VezlURL, CreateURLPayload, UpdateURLPayload } from "@/api/types";
 import { StatusChip, relativeTime, expiryDisplay } from "@/components/chips";
 import { CopyButton } from "@/components/CopyButton";
@@ -30,6 +31,8 @@ const DETAIL_ICON = (
 );
 
 export default function LinksPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const navigate = useNavigate();
   const [urls, setUrls] = useState<VezlURL[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,6 +163,7 @@ export default function LinksPage() {
                 <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Original URL</th>
                 <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Status</th>
                 <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Hits</th>
+                {isAdmin && <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Created By</th>}
                 <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Expires</th>
                 <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Created</th>
                 <th className="text-right text-xs font-semibold text-text-secondary px-4 py-3">Actions</th>
@@ -210,11 +214,16 @@ export default function LinksPage() {
                       )}
                     </div>
                   </td>
+                  {isAdmin && (
+                    <td className="px-4 py-3">
+                      <span className="text-xs text-text-secondary">{url.created_by || "—"}</span>
+                    </td>
+                  )}
                   <td className="px-4 py-3">
                     <span
                       className="text-xs"
                       style={{
-                        color: url.expires_at && new Date(url.expires_at).getTime() - Date.now() < 24 * 60 * 60 * 1000
+                        color: url.expires_at && typeof url.expires_at === 'string' && new Date(url.expires_at).getTime() - Date.now() < 24 * 60 * 60 * 1000
                           ? "#f5a524"
                           : "#71717a",
                       }}

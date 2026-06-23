@@ -53,7 +53,7 @@ func (h *URLsHandler) List(c *gin.Context) {
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 
 	if u.Role == "admin" {
-		urls, err := h.q.ListAllURLs(context.Background(), db.ListAllURLsParams{
+		urls, err := h.q.ListAllURLsWithUser(context.Background(), db.ListAllURLsWithUserParams{
 			Limit: int32(limit), Offset: int32(offset),
 		})
 		if err != nil {

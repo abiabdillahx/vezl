@@ -17,6 +17,11 @@ LIMIT $2 OFFSET $3;
 -- name: ListAllURLs :many
 SELECT * FROM urls ORDER BY created_at DESC LIMIT $1 OFFSET $2;
 
+-- name: ListAllURLsWithUser :many
+SELECT urls.*, users.username AS created_by FROM urls
+JOIN users ON urls.user_id = users.id
+ORDER BY urls.created_at DESC LIMIT $1 OFFSET $2;
+
 -- name: CountURLsByUser :one
 SELECT COUNT(*) FROM urls WHERE user_id = $1;
 
