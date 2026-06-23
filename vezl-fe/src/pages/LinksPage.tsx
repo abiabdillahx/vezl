@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, Spinner, Tooltip } from "@heroui/react";
 import { urlsApi } from "@/api/client";
@@ -8,6 +8,15 @@ import { StatusChip, relativeTime, expiryDisplay } from "@/components/chips";
 import { CopyButton } from "@/components/CopyButton";
 import { URLFormModal } from "@/components/URLFormModal";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+
+interface ExportLink {
+  shortcode: string;
+  original_url: string;
+  notes?: string | null;
+  hit_limit?: number;
+  expires_at?: string | null;
+  utm?: Record<string, string>;
+}
 
 const EDIT_ICON = (
   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -41,6 +50,8 @@ export default function LinksPage() {
   const [editTarget, setEditTarget] = useState<VezlURL | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<VezlURL | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,6 +100,53 @@ export default function LinksPage() {
     }
   }
 
+  function handleExport() {
+    const data: ExportLink[] = urls.map(u => ({
+      shortcode: u.shortcode,
+      original_url: u.original_url,
+      notes: u.notes,
+      hit_limit: u.hit_limit,
+      expires_at: u.expires_at,
+      utm: u.utm,
+    }));
+    const blob = new Blob([JSON.stringify({ "vezl-links": data }, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `vezl-links-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      const links: ExportLink[] = json["vezl-links"] ?? json.links ?? json;
+      if (!Array.isArray(links)) throw new Error("Invalid format: expected array of links");
+      for (const link of links) {
+        if (!link.original_url) continue;
+        await urlsApi.create({
+          original_url: link.original_url,
+          shortcode: link.shortcode || undefined,
+          notes: link.notes ?? undefined,
+          hit_limit: link.hit_limit ?? undefined,
+          expires_at: link.expires_at ?? undefined,
+          utm: link.utm ?? undefined,
+        });
+      }
+      await load();
+    } catch (err) {
+      alert(`Import failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
   return (
     <>
       {/* Header */}
@@ -117,7 +175,7 @@ export default function LinksPage() {
       {/* Table container */}
       <div className="bg-surface-elevated border border-border rounded-lg overflow-hidden">
         {/* Toolbar */}
-        <div className="px-4 py-3 border-b border-border">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <Input
             placeholder="Search shortcode or URL..."
             value={search}
@@ -134,6 +192,50 @@ export default function LinksPage() {
               inputWrapper: "bg-surface-raised border-border h-8 max-w-xs",
             }}
           />
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImport}
+            />
+            <Tooltip content="Import from JSON">
+              <Button
+                size="sm"
+                variant="flat"
+                isLoading={importing}
+                onPress={() => fileInputRef.current?.click()}
+                className="bg-surface-raised border border-border text-text-secondary hover:text-text-primary min-w-0"
+                startContent={
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                }
+              >
+                Import
+              </Button>
+            </Tooltip>
+            <Tooltip content="Export as JSON">
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={handleExport}
+                className="bg-surface-raised border border-border text-text-secondary hover:text-text-primary min-w-0"
+                startContent={
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                }
+              >
+                Export
+              </Button>
+            </Tooltip>
+          </div>
         </div>
 
         {/* Table */}
