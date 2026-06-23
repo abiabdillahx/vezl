@@ -12,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 	db "github.com/vezl/vezl-be/internal/db/sqlc"
 	"github.com/vezl/vezl-be/internal/middleware"
 )
@@ -128,8 +128,8 @@ func (h *URLsHandler) Create(c *gin.Context) {
 		}
 
 		// Check for unique constraint violation on shortcode
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 			if customShortcode != "" {
 				// User provided a shortcode — tell them it's taken
 				c.JSON(http.StatusConflict, gin.H{"error": "Shortcode already taken"})
