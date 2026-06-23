@@ -56,7 +56,7 @@ func main() {
 	r := gin.Default()
 
 	// API routes
-	v1 := r.Group("/api/v1")
+	v1 := r.Group("/api/v1", api.FlattenNullTypes())
 
 	authH := api.NewAuthHandler(queries, cfg)
 	v1.POST("/auth/login", authH.Login)
