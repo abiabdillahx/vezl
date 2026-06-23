@@ -119,10 +119,12 @@ func main() {
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 
-		// 1. Serve static assets (JS, CSS) from embedded dist
+		// 1. Serve static assets (JS, CSS, images) from embedded dist
 		assetPath := strings.TrimPrefix(path, "/")
 		if f, err := staticFS.Open(assetPath); err == nil {
 			f.Close()
+			// Set cache headers for static assets
+			c.Header("Cache-Control", "public, max-age=31536000, immutable")
 			c.FileFromFS(assetPath, http.FS(staticFS))
 			return
 		}

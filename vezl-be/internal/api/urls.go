@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	db "github.com/vezl/vezl-be/internal/db/sqlc"
 	"github.com/vezl/vezl-be/internal/middleware"
 )
@@ -90,7 +92,8 @@ func (h *URLsHandler) Create(c *gin.Context) {
 		return
 	}
 
-	sc := body.Shortcode
+	customShortcode := body.Shortcode
+	sc := customShortcode
 	if sc == "" {
 		sc = genShortcode(6)
 	}
@@ -103,22 +106,46 @@ func (h *URLsHandler) Create(c *gin.Context) {
 		utm = body.UTM
 	}
 
-	url, err := h.q.CreateURL(context.Background(), db.CreateURLParams{
-		ID:          uuid.NewString(),
-		UserID:      u.ID,
-		Shortcode:   sc,
-		OriginalUrl: body.OriginalURL,
-		Notes:       strToNullString(body.Notes),
-		Secret:      strToNullString(body.Secret),
-		HitLimit:    hitLimit,
-		ExpiresAt:   timeToNullTime(body.ExpiresAt),
-		Utm:         utm,
-	})
-	if err != nil {
-		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+	const maxRetries = 10
+	var url db.Url
+	var err error
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		url, err = h.q.CreateURL(context.Background(), db.CreateURLParams{
+			ID:          uuid.NewString(),
+			UserID:      u.ID,
+			Shortcode:   sc,
+			OriginalUrl: body.OriginalURL,
+			Notes:       strToNullString(body.Notes),
+			Secret:      strToNullString(body.Secret),
+			HitLimit:    hitLimit,
+			ExpiresAt:   timeToNullTime(body.ExpiresAt),
+			Utm:         utm,
+		})
+		if err == nil {
+			c.JSON(http.StatusCreated, url)
+			return
+		}
+
+		// Check for unique constraint violation on shortcode
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			if customShortcode != "" {
+				// User provided a shortcode — tell them it's taken
+				c.JSON(http.StatusConflict, gin.H{"error": "Shortcode already taken"})
+				return
+			}
+			// Auto-generated — retry with a new random shortcode
+			sc = genShortcode(6)
+			continue
+		}
+
+		// Other DB error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, url)
+
+	c.JSON(http.StatusConflict, gin.H{"error": "Failed to generate unique shortcode, please try again"})
 }
 
 func (h *URLsHandler) Get(c *gin.Context) {
