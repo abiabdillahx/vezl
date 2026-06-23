@@ -55,7 +55,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("vezl_session", token, int(time.Until(expiresAt).Seconds()), "/", "", true, true)
+	isSecure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("vezl_session", token, int(time.Until(expiresAt).Seconds()), "/", "", isSecure, true)
 	c.JSON(http.StatusOK, gin.H{"user": gin.H{
 		"id": user.ID, "email": user.Email, "username": user.Username, "role": user.Role,
 	}})
@@ -66,7 +68,8 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	if err == nil {
 		h.q.DeleteSession(context.Background(), cookie)
 	}
-	c.SetCookie("vezl_session", "", -1, "/", "", true, true)
+	isSecure := c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+	c.SetCookie("vezl_session", "", -1, "/", "", isSecure, true)
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
