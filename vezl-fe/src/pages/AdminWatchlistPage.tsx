@@ -115,7 +115,7 @@ export default function AdminWatchlistPage() {
                 <tr key={entry.id} className={`border-b border-border-subtle hover:bg-surface-raised ${i === entries.length - 1 ? "border-0" : ""}`}>
                   <td className="px-4 py-3 font-mono text-xs text-text-primary">{entry.domain}</td>
                   <td className="px-4 py-3"><WatchlistChip allowed={entry.allowed} /></td>
-                  <td className="px-4 py-3 text-xs text-text-secondary">{typeof entry.note === "object" && entry.note !== null ? (entry.note.Valid ? entry.note.String : "—") : (entry.note ?? "—")}</td>
+                  <td className="px-4 py-3 text-xs text-text-secondary">{entry.note ?? "—"}</td>
                   <td className="px-4 py-3 text-xs text-text-tertiary">{relativeTime(entry.created_at)}</td>
                   <td className="px-4 py-3 text-right">
                     <Button
