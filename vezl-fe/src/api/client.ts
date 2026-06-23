@@ -67,7 +67,7 @@ export const usersApi = {
   list: () => request<User[]>("/users"),
   create: (payload: { email: string; username: string; password: string; role?: string }) =>
     request<User>("/users", { method: "POST", body: JSON.stringify(payload) }),
-  update: (id: string, payload: { email: string; username: string; role: string }) =>
+  update: (id: string, payload: { email: string; username: string; role: string; password?: string }) =>
     request<User>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
   delete: (id: string) => request<void>(`/users/${id}`, { method: "DELETE" }),
 };

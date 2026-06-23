@@ -15,6 +15,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<User | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -61,6 +62,36 @@ export default function AdminUsersPage() {
     }
   }
 
+  function openEdit(user: User) {
+    setEditTarget(user);
+    setEmail(user.email);
+    setUsername(user.username);
+    setRole(user.role);
+    setPassword("");
+    setFormError("");
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editTarget) return;
+    setSaving(true);
+    setFormError("");
+    try {
+      const payload: { email: string; username: string; role: string; password?: string } = {
+        email, username, role,
+      };
+      if (password.trim()) payload.password = password;
+      const updated = await usersApi.update(editTarget.id, payload);
+      setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+      setEditTarget(null);
+      resetForm();
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "Failed to update user.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-6">
@@ -96,13 +127,22 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3"><RoleChip role={user.role} /></td>
                   <td className="px-4 py-3 text-xs text-text-tertiary">{relativeTime(user.created_at)}</td>
                   <td className="px-4 py-3 text-right">
-                    <Button
-                      size="sm" variant="light"
-                      className="text-[#f31260] text-xs h-7 min-w-0 px-2"
-                      onPress={() => setDeleteTarget(user)}
-                    >
-                      Delete
-                    </Button>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        size="sm" variant="light"
+                        className="text-text-secondary text-xs h-7 min-w-0 px-2"
+                        onPress={() => openEdit(user)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm" variant="light"
+                        className="text-[#f31260] text-xs h-7 min-w-0 px-2"
+                        onPress={() => setDeleteTarget(user)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -148,6 +188,48 @@ export default function AdminUsersPage() {
             <ModalFooter>
               <Button variant="light" className="text-text-secondary" type="button" onPress={() => { setCreateOpen(false); resetForm(); }}>Cancel</Button>
               <Button type="submit" color="primary" radius="full" isLoading={saving}>Create User</Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+
+      {/* Edit modal */}
+      <Modal
+        isOpen={!!editTarget}
+        onClose={() => { setEditTarget(null); resetForm(); }}
+        classNames={{
+          base: "bg-surface-elevated border border-border",
+          header: "text-text-primary border-b border-border",
+          footer: "border-t border-border",
+        }}
+      >
+        <ModalContent>
+          <form onSubmit={handleEdit}>
+            <ModalHeader>Edit User</ModalHeader>
+            <ModalBody className="gap-3 py-4">
+              <Input label="Email" type="email" value={email} onValueChange={setEmail} variant="bordered" classNames={inputStyles} isRequired />
+              <Input label="Username" value={username} onValueChange={setUsername} variant="bordered" classNames={inputStyles} isRequired />
+              <Input label="New Password (leave blank to keep)" type="password" value={password} onValueChange={setPassword} variant="bordered" classNames={inputStyles} />
+              <div>
+                <p className="text-xs text-text-secondary mb-1">Role</p>
+                <div className="flex gap-2">
+                  {["member", "admin"].map(r => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRole(r)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${role === r ? "border-accent text-accent" : "border-border text-text-secondary hover:border-border-strong"}`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {formError && <p className="text-xs text-[#f31260]">{formError}</p>}
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" className="text-text-secondary" type="button" onPress={() => { setEditTarget(null); resetForm(); }}>Cancel</Button>
+              <Button type="submit" color="primary" radius="full" isLoading={saving}>Save Changes</Button>
             </ModalFooter>
           </form>
         </ModalContent>

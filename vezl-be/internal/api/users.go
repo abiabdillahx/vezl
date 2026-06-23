@@ -65,14 +65,17 @@ func (h *UsersHandler) Create(c *gin.Context) {
 func (h *UsersHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var body struct {
-		Email    string `json:"email" binding:"required"`
-		Username string `json:"username" binding:"required"`
-		Role     string `json:"role" binding:"required"`
+		Email    string  `json:"email" binding:"required"`
+		Username string  `json:"username" binding:"required"`
+		Role     string  `json:"role" binding:"required"`
+		Password *string `json:"password"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Update email, username, role
 	user, err := h.q.UpdateUser(context.Background(), db.UpdateUserParams{
 		ID: id, Email: body.Email, Username: body.Username, Role: body.Role,
 	})
@@ -80,6 +83,22 @@ func (h *UsersHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Optionally update password
+	if body.Password != nil && *body.Password != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(*body.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "hash failed"})
+			return
+		}
+		if err := h.q.UpdatePassword(context.Background(), db.UpdatePasswordParams{
+			ID: id, Password: string(hash),
+		}); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, user)
 }
 
