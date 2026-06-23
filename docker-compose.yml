@@ -1,6 +1,7 @@
 services:
   vezl:
     build: .
+    restart: unless-stopped
     ports:
       - '3000:3000'
     environment:
@@ -15,6 +16,7 @@ services:
 
   db:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: vezl
       POSTGRES_PASSWORD: vezl

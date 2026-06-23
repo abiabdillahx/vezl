@@ -48,10 +48,17 @@ export default function LinkDetailPage() {
     .map(([date, clicks]) => ({ date, clicks }));
 
   // Breakdowns
+  function extractStr(val: unknown): string {
+    if (val == null) return "Unknown";
+    if (typeof val === "string") return val;
+    if (typeof val === "object" && val !== null && "String" in val) return (val as { String: string }).String || "Unknown";
+    return String(val);
+  }
+
   function breakdown(field: keyof AggregateMetric) {
     const map: Record<string, number> = {};
     aggregate.forEach(m => {
-      const v = String(m[field] ?? "Unknown");
+      const v = extractStr(m[field]);
       map[v] = (map[v] ?? 0) + Number(m.count);
     });
     const total = Object.values(map).reduce((s, v) => s + v, 0);
@@ -166,7 +173,7 @@ export default function LinkDetailPage() {
               { label: "Total Hits", value: url.hit },
               { label: "Hit Limit", value: url.hit_limit === -1 ? "Unlimited" : url.hit_limit },
               { label: "Expires", value: url.expires_at ? new Date(url.expires_at).toLocaleString() : "Never" },
-              { label: "Notes", value: url.notes ?? "—" },
+              { label: "Notes", value: extractStr(url.notes) || "—" },
               { label: "Created", value: new Date(url.created_at).toLocaleString() },
             ].map(row => (
               <div key={row.label} className="flex items-center gap-4">

@@ -18,6 +18,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
+	"runtime"
+
 	"github.com/vezl/vezl-be/internal/api"
 	"github.com/vezl/vezl-be/internal/config"
 	db "github.com/vezl/vezl-be/internal/db/sqlc"
@@ -90,6 +92,24 @@ func main() {
 	adminOnly.GET("/watchlist", watchlistH.List)
 	adminOnly.POST("/watchlist", watchlistH.Create)
 	adminOnly.DELETE("/watchlist/:id", watchlistH.Delete)
+
+	// Debug stats endpoint
+	r.GET("/debug/stats", func(c *gin.Context) {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+		c.JSON(http.StatusOK, gin.H{
+			"alloc_mb":       fmt.Sprintf("%.2f", float64(m.Alloc)/1024/1024),
+			"sys_mb":         fmt.Sprintf("%.2f", float64(m.Sys)/1024/1024),
+			"heap_alloc_mb":  fmt.Sprintf("%.2f", float64(m.HeapAlloc)/1024/1024),
+			"heap_sys_mb":    fmt.Sprintf("%.2f", float64(m.HeapSys)/1024/1024),
+			"heap_idle_mb":   fmt.Sprintf("%.2f", float64(m.HeapIdle)/1024/1024),
+			"heap_inuse_mb":  fmt.Sprintf("%.2f", float64(m.HeapInuse)/1024/1024),
+			"num_gc":         m.NumGC,
+			"goroutines":     runtime.NumGoroutine(),
+			"cpu_cores":      runtime.NumCPU(),
+			"go_version":     runtime.Version(),
+		})
+	})
 
 	// Static FE (embedded React build)
 	staticFS, _ := fs.Sub(static.Dist, "dist")

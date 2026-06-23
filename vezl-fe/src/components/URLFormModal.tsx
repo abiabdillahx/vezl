@@ -12,6 +12,13 @@ interface Props {
   initial?: URL;
 }
 
+function extractStr(val: unknown): string {
+  if (val == null) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && val !== null && "String" in val) return (val as { String: string }).String ?? "";
+  return String(val);
+}
+
 const inputStyles = {
   input: "bg-surface-raised text-text-primary text-sm",
   inputWrapper: "bg-surface-raised border-border hover:border-border-strong data-[focus=true]:border-accent",
@@ -35,8 +42,8 @@ export function URLFormModal({ isOpen, onClose, onSubmit, initial }: Props) {
     if (initial) {
       setOriginalUrl(initial.original_url);
       setShortcode(initial.shortcode);
-      setNotes(initial.notes ?? "");
-      setSecret(initial.secret ?? "");
+      setNotes(extractStr(initial.notes));
+      setSecret(extractStr(initial.secret));
       setHitLimit(String(initial.hit_limit));
       setExpiresAt(initial.expires_at && typeof initial.expires_at === 'string' ? initial.expires_at.slice(0, 16) : "");
       setActive(initial.active);
