@@ -178,7 +178,7 @@ export default function LinksPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-text-primary">{url.shortcode}</span>
-                      <CopyButton text={url.shortcode} />
+                      <CopyButton text={`${window.location.origin}/${url.shortcode}`} />
                     </div>
                   </td>
                   <td className="px-4 py-3">

@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -131,6 +132,27 @@ func main() {
 			code := path[1:]
 			if url, err := queries.GetURLByShortcode(c.Request.Context(), code); err == nil && url.Active {
 				// Valid shortcode — handle redirect logic
+
+				// Check expiry
+				if url.ExpiresAt.Valid && url.ExpiresAt.Time.Before(time.Now()) {
+					c.Status(http.StatusGone)
+					return
+				}
+
+				// Check hit limit
+				if url.HitLimit != -1 && url.Hit >= url.HitLimit {
+					c.Status(http.StatusGone)
+					return
+				}
+
+				// Check watchlist: block redirect to blacklisted domains
+				if urlDomain := extractDomain(url.OriginalUrl); urlDomain != "" {
+					if entry, wlErr := queries.GetWatchlistByDomain(c.Request.Context(), urlDomain); wlErr == nil && !entry.Allowed {
+						c.Status(http.StatusForbidden)
+						return
+					}
+				}
+
 				if url.Secret.Valid {
 					c.JSON(http.StatusOK, gin.H{"protected": true, "shortcode": code})
 					return
@@ -206,4 +228,11 @@ func bootstrapAdmin(q *db.Queries, cfg *config.Config) {
 	} else {
 		fmt.Printf("admin user created: %s\n", cfg.AdminEmail)
 	}
+}
+
+func extractDomain(rawURL string) string {
+	rawURL = strings.TrimPrefix(rawURL, "https://")
+	rawURL = strings.TrimPrefix(rawURL, "http://")
+	parts := strings.SplitN(rawURL, "/", 2)
+	return parts[0]
 }

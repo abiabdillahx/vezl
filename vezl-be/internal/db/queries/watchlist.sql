@@ -4,7 +4,7 @@ VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: GetWatchlistByDomain :one
-SELECT * FROM watchlist WHERE domain = $1 LIMIT 1;
+SELECT * FROM watchlist WHERE $1 = domain OR $1 LIKE '%.' || domain LIMIT 1;
 
 -- name: ListWatchlist :many
 SELECT * FROM watchlist ORDER BY created_at DESC;

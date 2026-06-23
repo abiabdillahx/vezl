@@ -97,7 +97,7 @@ export default function LinkDetailPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="font-mono text-xl font-bold text-text-primary">{url.shortcode}</span>
-            <CopyButton text={url.shortcode} />
+            <CopyButton text={`${window.location.origin}/${url.shortcode}`} />
             <StatusChip url={url} />
           </div>
           <a href={url.original_url} target="_blank" rel="noopener noreferrer" className="text-sm text-link hover:underline truncate-url block">

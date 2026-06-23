@@ -9,6 +9,7 @@ import LinkDetailPage from "@/pages/LinkDetailPage";
 import SettingsPage from "@/pages/SettingsPage";
 import AdminUsersPage from "@/pages/AdminUsersPage";
 import AdminWatchlistPage from "@/pages/AdminWatchlistPage";
+import NotFoundPage from "@/pages/NotFoundPage";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
               </Route>
             </Route>
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
