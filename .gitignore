@@ -1,0 +1,48 @@
+# Dependencies
+vezl-fe/node_modules/
+vezl-be/vendor/
+
+# Build output
+vezl-fe/dist/
+vezl-fe/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# sqlc binary (platform-specific)
+vezl-be/sqlc.exe
+sqlc
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test
+coverage/
+*.test
+
+# TypeScript
+*.tsbuildinfo
+
+# Docker
+docker-compose.override.yml
+
+PRD.md
+DESIGN.md

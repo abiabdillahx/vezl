@@ -1,0 +1,7 @@
+vezl-be/sqlc.exe
+vezl-fe/node_modules
+vezl-be/vendor
+.git
+.gitignore
+*.md
+LICENSE
