@@ -136,7 +136,7 @@ func main() {
 					return
 				}
 				// Async: increment hit + log metric
-				go queries.IncrementHit(c.Request.Context(), url.ID)
+				go queries.IncrementHit(context.Background(), url.ID)
 
 				utm := json.RawMessage("{}")
 				if url.Utm != nil {
