@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/vezl/vezl-be/internal/db/sqlc"
+	"github.com/vezl/vezl-be/internal/errors"
 	"github.com/vezl/vezl-be/internal/metrics"
 )
 
@@ -38,13 +39,13 @@ func (h *Handler) Redirect(c *gin.Context) {
 
 	// Check expiry
 	if url.ExpiresAt.Valid && url.ExpiresAt.Time.Before(time.Now()) {
-		c.Status(http.StatusGone)
+		c.Data(http.StatusGone, "text/html; charset=utf-8", []byte(errors.GonePage))
 		return
 	}
 
 	// Check hit limit
 	if url.HitLimit != -1 && url.Hit >= url.HitLimit {
-		c.Status(http.StatusGone)
+		c.Data(http.StatusGone, "text/html; charset=utf-8", []byte(errors.GonePage))
 		return
 	}
 
