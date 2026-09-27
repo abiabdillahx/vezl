@@ -1,6 +1,6 @@
-vezl-be/sqlc.exe
-vezl-fe/node_modules
-vezl-be/vendor
+server/sqlc.exe
+web/node_modules
+server/vendor
 .git
 .gitignore
 *.md

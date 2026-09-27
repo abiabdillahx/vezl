@@ -1,0 +1,23 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: "internal/db/queries"
+    schema: "migrations"
+    gen:
+      go:
+        package: "db"
+        out: "internal/db/sqlc"
+        emit_json_tags: true
+        overrides:
+          # Never serialize password hashes in API responses.
+          - column: "users.password"
+            go_struct_tag: 'json:"-"'
+          # UTM is stored as JSON text but must round-trip as a JSON object.
+          - column: "urls.utm"
+            go_type:
+              import: "github.com/abiabdillahx/vezl/server/internal/dbtype"
+              type: "JSON"
+          - column: "metrics.utm"
+            go_type:
+              import: "github.com/abiabdillahx/vezl/server/internal/dbtype"
+              type: "JSON"

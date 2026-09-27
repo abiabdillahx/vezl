@@ -1,10 +1,10 @@
 # Dependencies
-vezl-fe/node_modules/
-vezl-be/vendor/
+web/node_modules/
+server/vendor/
 
 # Build output
-vezl-fe/dist/
-vezl-fe/build/
+web/dist/
+web/build/
 *.exe
 *.exe~
 *.dll
@@ -12,8 +12,13 @@ vezl-fe/build/
 *.dylib
 
 # sqlc binary (platform-specific)
-vezl-be/sqlc.exe
+server/sqlc.exe
 sqlc
+
+# SQLite database files
+*.db
+*.db-wal
+*.db-shm
 
 # Environment & secrets
 .env
