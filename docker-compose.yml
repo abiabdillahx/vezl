@@ -1,5 +1,7 @@
 services:
   vezl:
+    # `docker compose pull` fetches the CI-built image; `up --build` builds locally instead.
+    image: ghcr.io/abiabdillahx/vezl:latest
     build:
       context: .
       args:
