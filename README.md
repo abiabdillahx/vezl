@@ -83,41 +83,73 @@ Semua request `/api/*` di-proxy ke backend `:3000`.
 
 ---
 
-## Run — Production (Docker Compose)
+## Run — Production
 
-### 1. Sesuaikan env di `docker-compose.yml`
+Jangan build di VPS: build butuh ~1GB RAM, padahal app-nya cuma ~10MB saat idle.
+GitHub Actions (`.github/workflows/build.yml`) yang build, VPS tinggal jalankan hasilnya:
 
-```yaml
-environment:
-  SESSION_SECRET: ganti-ini-min-32-karakter      # WAJIB diganti
-  ADMIN_EMAIL: admin@example.com
-  ADMIN_USERNAME: admin
-  ADMIN_PASSWORD: ganti-ini                       # WAJIB diganti
-```
+| Trigger | Hasil |
+|---|---|
+| Push ke `main` | Image `ghcr.io/abiabdillahx/vezl:latest` (amd64 + arm64) |
+| Push tag `v*` | Image `:1.2.3` / `:1.2`, plus binary di GitHub Release |
+| Pull request | Build saja (cek), tidak di-push |
 
-### 2. Build & Jalankan
+Pilih salah satu cara deploy:
+
+### Opsi A — Docker Compose (image dari GHCR)
+
+1. Copy `docker-compose.yml` ke VPS, lalu ganti env-nya:
+
+   ```yaml
+   environment:
+     SESSION_SECRET: ganti-ini-min-32-karakter      # WAJIB diganti
+     ADMIN_EMAIL: admin@example.com
+     ADMIN_USERNAME: admin
+     ADMIN_PASSWORD: ganti-ini                       # WAJIB diganti
+   ```
+
+2. Jalankan (dan ulangi untuk update):
+
+   ```bash
+   docker compose pull && docker compose up -d
+   ```
+
+> Package GHCR yang baru dibuat defaultnya **private**. Jadikan public di GitHub → Packages → `vezl` → Package settings, atau `docker login ghcr.io` di VPS pakai token dengan scope `read:packages`.
+
+Data SQLite (dan database geo) disimpan di volume `vezl-data` (`/data` di dalam container).
+Untuk build image sendiri di lokal: `docker compose up -d --build`.
+
+### Opsi B — Binary + systemd (tanpa Docker, paling hemat RAM)
+
+Download `vezl_<versi>_linux_<amd64|arm64>.tar.gz` dari halaman Releases, lalu di VPS:
 
 ```bash
-docker compose up -d --build
+tar xzf vezl_*_linux_*.tar.gz && cd vezl_*/
+sudo install -m 755 vezl /usr/local/bin/vezl
+sudo install -d -m 700 /etc/vezl
+sudo install -m 600 vezl.env.example /etc/vezl/vezl.env   # lalu edit secret-nya
+sudo install -m 644 vezl.service /etc/systemd/system/vezl.service
+sudo systemctl daemon-reload && sudo systemctl enable --now vezl
 ```
 
-Dockerfile otomatis build frontend → embed ke binary Go → jadi 1 container.
-App berjalan di `http://localhost:3000`.
-Data SQLite disimpan di volume `vezl-data` (`/data/vezl.db` di dalam container).
+Data tersimpan di `/var/lib/vezl`. Update: ganti `/usr/local/bin/vezl` dengan versi baru lalu `sudo systemctl restart vezl`.
+
+### Rilis versi baru
+
+```bash
+git tag v0.1.0 && git push origin v0.1.0
+```
 
 ### Backup
 
 ```bash
+# Opsi A
 docker compose exec vezl sh -c 'cat /data/vezl.db' > vezl-backup.db
+# Opsi B
+sudo cp /var/lib/vezl/vezl.db vezl-backup.db
 ```
 
-> Untuk backup yang konsisten saat app sedang jalan, stop dulu (`docker compose stop`) atau jalankan saat traffic sepi — SQLite mode WAL menyimpan tulisan terbaru di `vezl.db-wal` sampai di-checkpoint.
-
-### Stop
-
-```bash
-docker compose down
-```
+> Untuk backup yang konsisten saat app sedang jalan, stop dulu (`docker compose stop` / `systemctl stop vezl`) atau jalankan saat traffic sepi — SQLite mode WAL menyimpan tulisan terbaru di `vezl.db-wal` sampai di-checkpoint.
 
 ---
 
@@ -158,6 +190,8 @@ Lokasi klik di-resolve **offline** dari database [DB-IP City Lite](https://db-ip
 
 ```
 vezl/
+├── .github/workflows/   # CI: image GHCR + binary release
+├── deploy/              # systemd unit + contoh env (deploy tanpa Docker)
 ├── Dockerfile           # Multi-stage build (web → Go binary)
 ├── docker-compose.yml   # Production compose (port 3000)
 ├── server/              # Go backend (Gin + sqlc + golang-migrate)

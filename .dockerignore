@@ -1,5 +1,8 @@
 server/sqlc.exe
 web/node_modules
+web/dist
+# Rebuilt from web/ in the image; the committed copy only keeps `go build` working locally
+server/internal/static/dist
 server/vendor
 .git
 .gitignore
