@@ -4,6 +4,7 @@ import { watchlistApi } from "@/api/client";
 import type { WatchlistEntry } from "@/api/types";
 import { WatchlistChip, relativeTime } from "@/components/chips";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { inputClassNames } from "@/components/styles";
 
 export default function AdminWatchlistPage() {
   const [entries, setEntries] = useState<WatchlistEntry[]>([]);
@@ -44,23 +45,17 @@ export default function AdminWatchlistPage() {
     }
   }
 
-  const inputStyles = {
-    input: "bg-surface-raised text-text-primary text-sm",
-    inputWrapper: "bg-surface-raised border-border hover:border-border-strong data-[focus=true]:border-accent h-9",
-    label: "text-text-secondary text-xs",
-  };
-
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Watchlist</h1>
-        <p className="text-sm text-text-secondary mt-1">Manage domains that are blocked or explicitly allowed in redirects.</p>
+        <h1 className="text-[28px] font-semibold text-text-primary tracking-display">Watchlist</h1>
+        <p className="text-[15px] text-text-secondary mt-1">Manage domains that are blocked or explicitly allowed in redirects.</p>
       </div>
 
       {/* Inline add form */}
-      <form onSubmit={handleAdd} className="bg-surface-elevated border border-border rounded-lg p-5 mb-4">
-        <h2 className="text-sm font-semibold text-text-primary mb-3">Add Domain</h2>
-        <div className="flex gap-3 items-end">
+      <form onSubmit={handleAdd} className="bg-surface-elevated border border-border rounded-xl p-6 mb-5">
+        <h2 className="text-lg font-medium text-text-primary mb-4">Add Domain</h2>
+        <div className="flex gap-3 items-center">
           <Input
             label="Domain"
             placeholder="example.com"
@@ -68,8 +63,8 @@ export default function AdminWatchlistPage() {
             onValueChange={setDomain}
             size="sm"
             variant="bordered"
-            classNames={inputStyles}
-            className="w-48"
+            classNames={inputClassNames}
+            className="w-64"
           />
           <Input
             label="Note (optional)"
@@ -77,50 +72,50 @@ export default function AdminWatchlistPage() {
             onValueChange={setNote}
             size="sm"
             variant="bordered"
-            classNames={inputStyles}
+            classNames={inputClassNames}
             className="flex-1"
           />
-          <div className="flex items-center gap-2 pb-1">
-            <Switch isSelected={allowed} onValueChange={setAllowed} size="sm" color="success" />
-            <span className="text-xs text-text-secondary">{allowed ? "Allow" : "Block"}</span>
+          <div className="flex items-center gap-2 px-1">
+            <Switch isSelected={allowed} onValueChange={setAllowed} size="sm" color="primary" />
+            <span className="text-sm text-text-secondary w-10">{allowed ? "Allow" : "Block"}</span>
           </div>
-          <Button type="submit" color="primary" radius="full" size="sm" isLoading={saving} isDisabled={!domain.trim()}>
+          <Button type="submit" color="primary" size="lg" radius="md" className="font-medium" isLoading={saving} isDisabled={!domain.trim()}>
             Add
           </Button>
         </div>
       </form>
 
       {/* Table */}
-      <div className="bg-surface-elevated border border-border rounded-lg overflow-hidden">
+      <div className="bg-surface-elevated border border-border rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex justify-center items-center h-48"><Spinner size="sm" /></div>
         ) : (entries || []).length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 gap-2">
-            <p className="text-sm font-semibold text-text-primary">No watchlist entries</p>
+            <p className="text-base font-medium text-text-primary">No watchlist entries</p>
             <p className="text-sm text-text-secondary">Add domains above to block or allow them.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-[15px] whitespace-nowrap">
             <thead>
-              <tr className="bg-surface-raised border-b border-border">
-                <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Domain</th>
-                <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Status</th>
-                <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Note</th>
-                <th className="text-left text-xs font-semibold text-text-secondary px-4 py-3">Added</th>
-                <th className="text-right text-xs font-semibold text-text-secondary px-4 py-3">Actions</th>
+              <tr className="bg-surface-muted border-b border-border-subtle">
+                <th className="text-left text-[13px] font-medium text-text-tertiary px-5 py-3">Domain</th>
+                <th className="text-left text-[13px] font-medium text-text-tertiary px-5 py-3">Status</th>
+                <th className="text-left text-[13px] font-medium text-text-tertiary px-5 py-3">Note</th>
+                <th className="text-left text-[13px] font-medium text-text-tertiary px-5 py-3">Added</th>
+                <th className="text-right text-[13px] font-medium text-text-tertiary px-5 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
               {entries.map((entry, i) => (
-                <tr key={entry.id} className={`border-b border-border-subtle hover:bg-surface-raised ${i === entries.length - 1 ? "border-0" : ""}`}>
-                  <td className="px-4 py-3 font-mono text-xs text-text-primary">{entry.domain}</td>
-                  <td className="px-4 py-3"><WatchlistChip allowed={entry.allowed} /></td>
-                  <td className="px-4 py-3 text-xs text-text-secondary">{entry.note ?? "—"}</td>
-                  <td className="px-4 py-3 text-xs text-text-tertiary">{relativeTime(entry.created_at)}</td>
-                  <td className="px-4 py-3 text-right">
+                <tr key={entry.id} className={`border-b border-border-subtle hover:bg-surface-muted ${i === entries.length - 1 ? "border-0" : ""}`}>
+                  <td className="px-5 py-3.5 font-mono text-sm text-text-primary">{entry.domain}</td>
+                  <td className="px-5 py-3.5"><WatchlistChip allowed={entry.allowed} /></td>
+                  <td className="px-5 py-3.5 text-sm text-text-secondary">{entry.note ?? "—"}</td>
+                  <td className="px-5 py-3.5 text-sm text-text-tertiary">{relativeTime(entry.created_at)}</td>
+                  <td className="px-5 py-3.5 text-right">
                     <Button
                       size="sm" variant="light"
-                      className="text-[#f31260] text-xs h-7 min-w-0 px-2"
+                      className="text-danger text-sm font-medium h-8 min-w-0 px-2.5 data-[hover=true]:bg-danger/10"
                       onPress={() => setDeleteTarget(entry)}
                     >
                       Remove

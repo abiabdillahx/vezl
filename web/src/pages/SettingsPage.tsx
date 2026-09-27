@@ -6,12 +6,7 @@ import type { APIKey } from "@/api/types";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CopyButton } from "@/components/CopyButton";
 import { relativeTime } from "@/components/chips";
-
-const inputStyles = {
-  input: "bg-surface-raised text-text-primary text-sm",
-  inputWrapper: "bg-surface-raised border-border hover:border-border-strong data-[focus=true]:border-accent",
-  label: "text-text-secondary text-xs",
-};
+import { inputClassNames, modalClassNames } from "@/components/styles";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -54,43 +49,42 @@ export default function SettingsPage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Settings</h1>
+        <h1 className="text-[28px] font-semibold text-text-primary tracking-display">Settings</h1>
       </div>
 
       {/* Profile section */}
-      <section className="bg-surface-elevated border border-border rounded-lg p-6 mb-4">
-        <h2 className="text-base font-semibold text-text-primary mb-4">Profile</h2>
-        <div className="grid grid-cols-2 gap-4 max-w-md">
+      <section className="bg-surface-elevated border border-border rounded-xl p-6 mb-5">
+        <h2 className="text-lg font-medium text-text-primary mb-5">Profile</h2>
+        <div className="grid grid-cols-3 gap-6 max-w-2xl">
           <div>
-            <p className="text-xs text-text-secondary mb-1">Email</p>
-            <p className="text-sm text-text-primary">{user?.email}</p>
+            <p className="text-sm text-text-tertiary mb-1">Email</p>
+            <p className="text-[15px] text-text-primary">{user?.email}</p>
           </div>
           <div>
-            <p className="text-xs text-text-secondary mb-1">Username</p>
-            <p className="text-sm text-text-primary">{user?.username}</p>
+            <p className="text-sm text-text-tertiary mb-1">Username</p>
+            <p className="text-[15px] text-text-primary">{user?.username}</p>
           </div>
           <div>
-            <p className="text-xs text-text-secondary mb-1">Role</p>
-            <p className="text-sm text-text-primary capitalize">{user?.role}</p>
+            <p className="text-sm text-text-tertiary mb-1">Role</p>
+            <p className="text-[15px] text-text-primary capitalize">{user?.role}</p>
           </div>
         </div>
       </section>
 
       {/* API Keys section */}
-      <section className="bg-surface-elevated border border-border rounded-lg p-6">
-        <h2 className="text-base font-semibold text-text-primary mb-4">API Keys</h2>
+      <section className="bg-surface-elevated border border-border rounded-xl p-6">
+        <h2 className="text-lg font-medium text-text-primary mb-5">API Keys</h2>
 
-        <div className="flex gap-2 mb-6 max-w-sm">
+        <div className="flex gap-2 mb-6 max-w-md">
           <Input
             placeholder="Key name"
             value={newKeyName}
             onValueChange={setNewKeyName}
-            size="sm"
             variant="bordered"
-            classNames={inputStyles}
+            classNames={inputClassNames}
           />
           <Button
-            color="primary" radius="full" size="sm"
+            color="primary" className="font-medium shrink-0"
             isLoading={creating}
             onPress={handleCreateKey}
             isDisabled={!newKeyName.trim()}
@@ -100,24 +94,24 @@ export default function SettingsPage() {
         </div>
 
         {(keys || []).length === 0 ? (
-          <p className="text-sm text-text-tertiary">No API keys yet.</p>
+          <p className="text-[15px] text-text-tertiary">No API keys yet.</p>
         ) : (
           <div className="space-y-1">
             {/* Header */}
-            <div className="grid grid-cols-[1fr_160px_120px_80px] gap-4 px-3 py-2 text-xs font-semibold text-text-secondary">
+            <div className="grid grid-cols-[1fr_180px_140px_90px] gap-4 px-4 py-2.5 text-[13px] font-medium text-text-tertiary border-b border-border-subtle">
               <span>Name</span><span>Last Used</span><span>Created</span><span className="text-right">Actions</span>
             </div>
             {(keys || []).map(key => (
-              <div key={key.id} className="grid grid-cols-[1fr_160px_120px_80px] gap-4 items-center px-3 py-2 rounded-lg hover:bg-surface-raised">
-                <span className="text-sm text-text-primary font-medium">{key.name}</span>
-                <span className="text-xs text-text-tertiary">
+              <div key={key.id} className="grid grid-cols-[1fr_180px_140px_90px] gap-4 items-center px-4 py-3 rounded-md hover:bg-surface-muted">
+                <span className="text-[15px] text-text-primary font-medium">{key.name}</span>
+                <span className="text-sm text-text-tertiary">
                   {key.last_used ? relativeTime(key.last_used) : "Never"}
                 </span>
-                <span className="text-xs text-text-tertiary">{relativeTime(key.created_at)}</span>
+                <span className="text-sm text-text-tertiary">{relativeTime(key.created_at)}</span>
                 <div className="flex justify-end">
                   <Button
                     size="sm" variant="light"
-                    className="text-[#f31260] text-xs h-7 min-w-0 px-2"
+                    className="text-danger text-sm font-medium h-8 min-w-0 px-2.5 data-[hover=true]:bg-danger/10"
                     onPress={() => setRevokeTarget(key)}
                   >
                     Revoke
@@ -133,23 +127,19 @@ export default function SettingsPage() {
       <Modal
         isOpen={!!plainKey}
         onClose={() => setPlainKey(null)}
-        classNames={{
-          base: "bg-surface-elevated border border-border",
-          header: "text-text-primary border-b border-border",
-          footer: "border-t border-border",
-        }}
+        classNames={modalClassNames}
       >
         <ModalContent>
           <ModalHeader>API Key Created</ModalHeader>
           <ModalBody className="py-4 gap-3">
-            <p className="text-sm" style={{ color: "#f5a524" }}>⚠ This key will not be shown again. Copy it now.</p>
-            <div className="flex items-center gap-2 bg-surface-raised rounded-lg px-3 py-2">
-              <code className="font-mono text-xs text-text-primary flex-1 break-all">{plainKey}</code>
+            <p className="text-sm text-warning">⚠ This key will not be shown again. Copy it now.</p>
+            <div className="flex items-center gap-2 bg-surface-muted border border-border rounded-md px-3 py-2.5">
+              <code className="font-mono text-[13px] text-text-primary flex-1 break-all">{plainKey}</code>
               {plainKey && <CopyButton text={plainKey} />}
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" radius="full" onPress={() => setPlainKey(null)}>Done</Button>
+            <Button color="primary" className="font-medium" onPress={() => setPlainKey(null)}>Done</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

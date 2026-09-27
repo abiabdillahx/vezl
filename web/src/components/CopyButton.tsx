@@ -29,7 +29,7 @@ export function CopyButton({ text }: { text: string }) {
         isIconOnly
         size="sm"
         variant="flat"
-        className="w-7 h-7 min-w-0 bg-surface-raised border border-border text-text-secondary hover:text-text-primary"
+        className="w-7 h-7 min-w-0 bg-canvas border border-border text-text-tertiary hover:text-text-primary hover:bg-surface-raised"
         onPress={handleCopy}
       >
         {copied ? CHECK_ICON : COPY_ICON}
