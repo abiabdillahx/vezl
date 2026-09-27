@@ -8,29 +8,21 @@ services:
     ports:
       - '3000:3000'
     environment:
-      DATABASE_URL: postgres://vezl:vezl@db:5432/vezl
+      DATABASE_PATH: /data/vezl.db
       SESSION_SECRET: change-me-min-32-chars-please
       ADMIN_EMAIL: admin@example.com
       ADMIN_USERNAME: admin
       ADMIN_PASSWORD: change-me
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: vezl
-      POSTGRES_PASSWORD: vezl
-      POSTGRES_DB: vezl
+      GIN_MODE: release
+      # Soft heap cap so the Go GC stays frugal on small VPSes.
+      GOMEMLIMIT: 100MiB
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U vezl']
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - vezl-data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
 
 volumes:
-  pgdata:
+  vezl-data:
