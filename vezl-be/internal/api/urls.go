@@ -49,6 +49,18 @@ func genShortcode(n int) string {
 	return string(b)
 }
 
+// loadOwnedURL fetches the URL for :id and checks the caller may access it
+// (owner or admin). Responds 404 otherwise, so foreign IDs aren't disclosed.
+func (h *URLsHandler) loadOwnedURL(c *gin.Context) (db.Url, bool) {
+	u := middleware.GetUser(c)
+	url, err := h.q.GetURLByID(c.Request.Context(), c.Param("id"))
+	if err != nil || (u.Role != "admin" && url.UserID != u.ID) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return db.Url{}, false
+	}
+	return url, true
+}
+
 func (h *URLsHandler) List(c *gin.Context) {
 	u := middleware.GetUser(c)
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -92,7 +104,17 @@ func (h *URLsHandler) Create(c *gin.Context) {
 		return
 	}
 
+	if err := validateTargetURL(body.OriginalURL); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	customShortcode := body.Shortcode
+	if customShortcode != "" {
+		if err := validateShortcode(customShortcode); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
 	sc := customShortcode
 	if sc == "" {
 		sc = genShortcode(6)
@@ -149,15 +171,18 @@ func (h *URLsHandler) Create(c *gin.Context) {
 }
 
 func (h *URLsHandler) Get(c *gin.Context) {
-	url, err := h.q.GetURLByID(context.Background(), c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+	url, ok := h.loadOwnedURL(c)
+	if !ok {
 		return
 	}
 	c.JSON(http.StatusOK, url)
 }
 
 func (h *URLsHandler) Update(c *gin.Context) {
+	existing, ok := h.loadOwnedURL(c)
+	if !ok {
+		return
+	}
 	var body struct {
 		OriginalURL string          `json:"original_url" binding:"required"`
 		Notes       *string         `json:"notes"`
@@ -171,12 +196,16 @@ func (h *URLsHandler) Update(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if err := validateTargetURL(body.OriginalURL); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	utm := json.RawMessage("{}")
 	if body.UTM != nil {
 		utm = body.UTM
 	}
 	url, err := h.q.UpdateURL(context.Background(), db.UpdateURLParams{
-		ID:          c.Param("id"),
+		ID:          existing.ID,
 		OriginalUrl: body.OriginalURL,
 		Notes:       strToNullString(body.Notes),
 		Secret:      strToNullString(body.Secret),
@@ -193,7 +222,11 @@ func (h *URLsHandler) Update(c *gin.Context) {
 }
 
 func (h *URLsHandler) Delete(c *gin.Context) {
-	if err := h.q.DeleteURL(context.Background(), c.Param("id")); err != nil {
+	url, ok := h.loadOwnedURL(c)
+	if !ok {
+		return
+	}
+	if err := h.q.DeleteURL(context.Background(), url.ID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -201,8 +234,12 @@ func (h *URLsHandler) Delete(c *gin.Context) {
 }
 
 func (h *URLsHandler) Stats(c *gin.Context) {
+	url, ok := h.loadOwnedURL(c)
+	if !ok {
+		return
+	}
 	metrics, err := h.q.GetMetricsByURL(context.Background(), db.GetMetricsByURLParams{
-		UrlID:   strToNullString(stringPtr(c.Param("id"))),
+		UrlID:   strToNullString(&url.ID),
 		Column2: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC),
 		Column3: time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC),
 	})
@@ -212,5 +249,3 @@ func (h *URLsHandler) Stats(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, metrics)
 }
-
-func stringPtr(s string) *string { return &s }

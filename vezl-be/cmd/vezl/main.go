@@ -97,7 +97,7 @@ func main() {
 	adminOnly.DELETE("/watchlist/:id", watchlistH.Delete)
 
 	// Debug stats endpoint
-	r.GET("/debug/stats", func(c *gin.Context) {
+	r.GET("/debug/stats", middleware.Auth(queries), middleware.AdminOnly(), func(c *gin.Context) {
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
 		c.JSON(http.StatusOK, gin.H{
@@ -132,7 +132,7 @@ func main() {
 		}
 
 		// 2. Single-segment path → try shortcode redirect
-		if path != "/" && !strings.Contains(path[1:], "/") {
+		if path != "/" && !strings.Contains(path[1:], "/") && !api.IsReservedShortcode(path[1:]) {
 			code := path[1:]
 			if url, err := queries.GetURLByShortcode(c.Request.Context(), code); err == nil && url.Active {
 				// Valid shortcode — handle redirect logic
@@ -150,7 +150,7 @@ func main() {
 				}
 
 				// Check watchlist: block redirect to blacklisted domains
-				if urlDomain := extractDomain(url.OriginalUrl); urlDomain != "" {
+				if urlDomain := api.HostOf(url.OriginalUrl); urlDomain != "" {
 					if entry, wlErr := queries.GetWatchlistByDomain(c.Request.Context(), urlDomain); wlErr == nil && !entry.Allowed {
 						c.Data(http.StatusForbidden, "text/html; charset=utf-8", []byte(errors.ForbiddenPage))
 						return
@@ -232,12 +232,5 @@ func bootstrapAdmin(q *db.Queries, cfg *config.Config) {
 	} else {
 		fmt.Printf("admin user created: %s\n", cfg.AdminEmail)
 	}
-}
-
-func extractDomain(rawURL string) string {
-	rawURL = strings.TrimPrefix(rawURL, "https://")
-	rawURL = strings.TrimPrefix(rawURL, "http://")
-	parts := strings.SplitN(rawURL, "/", 2)
-	return parts[0]
 }
 

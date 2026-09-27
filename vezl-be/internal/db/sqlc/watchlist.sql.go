@@ -51,7 +51,7 @@ func (q *Queries) DeleteWatchlistEntry(ctx context.Context, id string) error {
 }
 
 const getWatchlistByDomain = `-- name: GetWatchlistByDomain :one
-SELECT id, domain, allowed, note, created_at FROM watchlist WHERE domain = $1 LIMIT 1
+SELECT id, domain, allowed, note, created_at FROM watchlist WHERE lower(domain) = $1 OR $1 LIKE '%.' || lower(domain) LIMIT 1
 `
 
 func (q *Queries) GetWatchlistByDomain(ctx context.Context, domain string) (Watchlist, error) {

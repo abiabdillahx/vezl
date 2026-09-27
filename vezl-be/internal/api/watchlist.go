@@ -36,9 +36,14 @@ func (h *WatchlistHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	domain := normalizeDomain(body.Domain)
+	if domain == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid domain"})
+		return
+	}
 	item, err := h.q.CreateWatchlistEntry(context.Background(), db.CreateWatchlistEntryParams{
 		ID:      uuid.NewString(),
-		Domain:  body.Domain,
+		Domain:  domain,
 		Allowed: body.Allowed,
 		Note:    strToNullString(body.Note),
 	})

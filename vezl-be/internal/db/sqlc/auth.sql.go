@@ -212,6 +212,20 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
+const updatePassword = `-- name: UpdatePassword :exec
+UPDATE users SET password=$2, updated_at=NOW() WHERE id=$1
+`
+
+type UpdatePasswordParams struct {
+	ID       string `json:"id"`
+	Password string `json:"password"`
+}
+
+func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
+	_, err := q.db.ExecContext(ctx, updatePassword, arg.ID, arg.Password)
+	return err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users SET email=$2, username=$3, role=$4, updated_at=NOW()
 WHERE id=$1 RETURNING id, email, username, password, role, created_at, updated_at
@@ -242,18 +256,4 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const updatePassword = `-- name: UpdatePassword :exec
-UPDATE users SET password=$2, updated_at=NOW() WHERE id=$1
-`
-
-type UpdatePasswordParams struct {
-	ID       string `json:"id"`
-	Password string `json:"password"`
-}
-
-func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
-	_, err := q.db.ExecContext(ctx, updatePassword, arg.ID, arg.Password)
-	return err
 }

@@ -53,16 +53,19 @@ func (q *Queries) CreateMetric(ctx context.Context, arg CreateMetricParams) erro
 const getAggregateMetrics = `-- name: GetAggregateMetrics :many
 SELECT url_id, browser, os, device, country, COUNT(*) as count
 FROM metrics
-WHERE ($1::timestamptz IS NULL OR timestamp >= $1)
-  AND ($2::timestamptz IS NULL OR timestamp <= $2)
-  AND ($3::text IS NULL OR url_id = $3)
+WHERE ($1::boolean OR user_id = $2)
+  AND timestamp >= $3::timestamptz
+  AND timestamp <= $4::timestamptz
+  AND ($5::text = '' OR url_id = $5)
 GROUP BY url_id, browser, os, device, country
 `
 
 type GetAggregateMetricsParams struct {
-	Column1 time.Time `json:"column_1"`
-	Column2 time.Time `json:"column_2"`
-	Column3 string    `json:"column_3"`
+	AllUsers bool      `json:"all_users"`
+	UserID   string    `json:"user_id"`
+	FromTime time.Time `json:"from_time"`
+	ToTime   time.Time `json:"to_time"`
+	UrlID    string    `json:"url_id"`
 }
 
 type GetAggregateMetricsRow struct {
@@ -75,7 +78,13 @@ type GetAggregateMetricsRow struct {
 }
 
 func (q *Queries) GetAggregateMetrics(ctx context.Context, arg GetAggregateMetricsParams) ([]GetAggregateMetricsRow, error) {
-	rows, err := q.db.QueryContext(ctx, getAggregateMetrics, arg.Column1, arg.Column2, arg.Column3)
+	rows, err := q.db.QueryContext(ctx, getAggregateMetrics,
+		arg.AllUsers,
+		arg.UserID,
+		arg.FromTime,
+		arg.ToTime,
+		arg.UrlID,
+	)
 	if err != nil {
 		return nil, err
 	}

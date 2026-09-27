@@ -12,7 +12,8 @@ ORDER BY timestamp DESC;
 -- name: GetAggregateMetrics :many
 SELECT url_id, browser, os, device, country, COUNT(*) as count
 FROM metrics
-WHERE ($1::timestamptz IS NULL OR timestamp >= $1)
-  AND ($2::timestamptz IS NULL OR timestamp <= $2)
-  AND ($3::text IS NULL OR url_id = $3)
+WHERE (sqlc.arg(all_users)::boolean OR user_id = sqlc.arg(user_id))
+  AND timestamp >= sqlc.arg(from_time)::timestamptz
+  AND timestamp <= sqlc.arg(to_time)::timestamptz
+  AND (sqlc.arg(url_id)::text = '' OR url_id = sqlc.arg(url_id))
 GROUP BY url_id, browser, os, device, country;
