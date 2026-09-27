@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input } from "@heroui/react";
 import { useAuth } from "@/contexts/AuthContext";
+import { inputClassNames } from "@/components/styles";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -26,11 +28,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center">
-      <div className="w-[380px] bg-surface-elevated border border-border rounded-xl p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-text-primary tracking-tight">vezl</h1>
-          <p className="text-sm text-text-secondary mt-1">Sign in to your account</p>
+    <div className="relative min-h-screen bg-canvas-soft dark:bg-canvas flex items-center justify-center px-4">
+      <ThemeToggle className="absolute top-4 right-4" />
+      <div className="w-full max-w-[400px] bg-surface-elevated border border-border rounded-xl p-10 shadow-sm">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <img src="/vezl.png" alt="" className="w-11 h-11 rounded-lg mb-4 dark:ring-1 dark:ring-border-strong" />
+          <h1 className="text-[28px] font-semibold text-text-primary tracking-display">vezl</h1>
+          <p className="text-[15px] text-text-secondary mt-1">Sign in to your account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -40,11 +44,7 @@ export default function LoginPage() {
             value={email}
             onValueChange={setEmail}
             variant="bordered"
-            classNames={{
-              input: "bg-surface-raised text-text-primary",
-              inputWrapper: "bg-surface-raised border-border hover:border-border-strong data-[focus=true]:border-accent",
-              label: "text-text-secondary",
-            }}
+            classNames={inputClassNames}
             isRequired
           />
           <Input
@@ -53,21 +53,18 @@ export default function LoginPage() {
             value={password}
             onValueChange={setPassword}
             variant="bordered"
-            classNames={{
-              input: "bg-surface-raised text-text-primary",
-              inputWrapper: "bg-surface-raised border-border hover:border-border-strong data-[focus=true]:border-accent",
-              label: "text-text-secondary",
-            }}
+            classNames={inputClassNames}
             isRequired
           />
           {error && (
-            <p className="text-xs text-[#f31260]">{error}</p>
+            <p className="text-[13px] text-danger">{error}</p>
           )}
           <Button
             type="submit"
             color="primary"
+            size="lg"
+            radius="md"
             className="w-full font-medium"
-            radius="full"
             isLoading={loading}
           >
             Login

@@ -4,6 +4,7 @@ import {
   Button, Input, Textarea, Switch,
 } from "@heroui/react";
 import type { URL, CreateURLPayload, UpdateURLPayload } from "@/api/types";
+import { inputClassNames, modalClassNames, secondaryButtonClass } from "./styles";
 
 interface Props {
   isOpen: boolean;
@@ -18,12 +19,6 @@ function extractStr(val: unknown): string {
   if (typeof val === "object" && val !== null && "String" in val) return (val as { String: string }).String ?? "";
   return String(val);
 }
-
-const inputStyles = {
-  input: "bg-surface-raised text-text-primary text-sm",
-  inputWrapper: "bg-surface-raised border-border hover:border-border-strong data-[focus=true]:border-accent",
-  label: "text-text-secondary text-xs",
-};
 
 export function URLFormModal({ isOpen, onClose, onSubmit, initial }: Props) {
   const isEdit = !!initial;
@@ -82,23 +77,19 @@ export function URLFormModal({ isOpen, onClose, onSubmit, initial }: Props) {
       isOpen={isOpen}
       onClose={onClose}
       size="lg"
-      classNames={{
-        base: "bg-surface-elevated border border-border",
-        header: "text-text-primary border-b border-border",
-        footer: "border-t border-border",
-      }}
+      classNames={modalClassNames}
     >
       <ModalContent>
         <form onSubmit={handleSubmit}>
           <ModalHeader>{isEdit ? "Edit Link" : "Create Short URL"}</ModalHeader>
-          <ModalBody className="gap-3 py-4">
+          <ModalBody className="gap-4 py-5">
             <Input
               label="Original URL"
               placeholder="https://example.com/long-url"
               value={originalUrl}
               onValueChange={setOriginalUrl}
               variant="bordered"
-              classNames={inputStyles}
+              classNames={inputClassNames}
               isRequired
             />
             {!isEdit && (
@@ -108,7 +99,7 @@ export function URLFormModal({ isOpen, onClose, onSubmit, initial }: Props) {
                 value={shortcode}
                 onValueChange={setShortcode}
                 variant="bordered"
-                classNames={{ ...inputStyles, input: "bg-surface-raised text-text-primary text-sm font-mono" }}
+                classNames={{ ...inputClassNames, input: `${inputClassNames.input} font-mono` }}
               />
             )}
             <Textarea
@@ -117,7 +108,7 @@ export function URLFormModal({ isOpen, onClose, onSubmit, initial }: Props) {
               onValueChange={setNotes}
               variant="bordered"
               minRows={2}
-              classNames={inputStyles}
+              classNames={inputClassNames}
             />
             <div className="grid grid-cols-2 gap-3">
               <Input
@@ -126,15 +117,16 @@ export function URLFormModal({ isOpen, onClose, onSubmit, initial }: Props) {
                 value={hitLimit}
                 onValueChange={setHitLimit}
                 variant="bordered"
-                classNames={inputStyles}
+                classNames={inputClassNames}
               />
               <Input
                 label="Expires at"
                 type="datetime-local"
+                placeholder=" "
                 value={expiresAt}
                 onValueChange={setExpiresAt}
                 variant="bordered"
-                classNames={inputStyles}
+                classNames={inputClassNames}
               />
             </div>
             <Input
@@ -143,21 +135,21 @@ export function URLFormModal({ isOpen, onClose, onSubmit, initial }: Props) {
               value={secret}
               onValueChange={setSecret}
               variant="bordered"
-              classNames={inputStyles}
+              classNames={inputClassNames}
             />
             {isEdit && (
               <div className="flex items-center gap-3">
-                <Switch isSelected={active} onValueChange={setActive} size="sm" color="success" />
-                <span className="text-sm text-text-secondary">Active</span>
+                <Switch isSelected={active} onValueChange={setActive} size="sm" color="primary" />
+                <span className="text-sm text-text-primary">Active</span>
               </div>
             )}
-            {error && <p className="text-xs text-[#f31260]">{error}</p>}
+            {error && <p className="text-[13px] text-danger">{error}</p>}
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" className="text-text-secondary" onPress={onClose} type="button">
+            <Button className={secondaryButtonClass} onPress={onClose} type="button">
               Cancel
             </Button>
-            <Button type="submit" color="primary" radius="full" isLoading={loading}>
+            <Button type="submit" color="primary" className="font-medium" isLoading={loading}>
               {isEdit ? "Save Changes" : "Create Link"}
             </Button>
           </ModalFooter>

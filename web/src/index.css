@@ -3,6 +3,61 @@
 @tailwind utilities;
 
 @layer base {
+  /* Design tokens (RGB channels, consumed by tailwind.config.js).
+     Near-monochrome white UI; the blue accent is the only chromatic color. */
+  :root {
+    --canvas: 255 255 255;          /* sidebar, login, cards */
+    --canvas-soft: 250 250 250;     /* main content background */
+    --surface-elevated: 255 255 255;
+    --surface-raised: 245 245 245;  /* chip fills, button hover */
+    --surface-subtle: 237 237 237;
+    --surface-muted: 250 250 250;   /* table headers and row hover */
+
+    --accent: 62 166 255;           /* #3ea6ff fill, pairs with near-black text */
+    --accent-hover: 47 143 240;     /* #2f8ff0 */
+    --accent-strong: 23 102 201;    /* #1766c9 text/links/focus on white (5.5:1) */
+
+    --border: 229 229 229;          /* #e5e5e5 card hairlines */
+    --border-strong: 199 199 199;   /* #c7c7c7 */
+    --border-subtle: 237 237 237;   /* #ededed row dividers */
+
+    --text-primary: 23 23 23;       /* #171717 ink */
+    --text-secondary: 82 82 82;     /* #525252 */
+    --text-tertiary: 112 112 112;   /* #707070 mute (4.9:1 on white) */
+    --text-disabled: 154 154 154;   /* #9a9a9a */
+
+    --success: 21 128 61;           /* #15803d, text-safe on white */
+    --warning: 180 83 9;            /* #b45309 */
+    --danger: 220 38 38;            /* #dc2626 */
+  }
+
+  /* Dark theme: the original high-contrast zinc palette (toggled via <html class="dark">). */
+  .dark {
+    --canvas: 9 9 11;               /* #09090b sidebar, inputs, login backdrop */
+    --canvas-soft: 24 24 27;        /* #18181b main content */
+    --surface-elevated: 24 24 27;   /* #18181b cards, modals */
+    --surface-raised: 39 39 42;     /* #27272a */
+    --surface-subtle: 63 63 70;     /* #3f3f46 */
+    --surface-muted: 39 39 42;      /* #27272a table headers and row hover */
+
+    --accent: 62 166 255;           /* same fill, still carries dark ink */
+    --accent-hover: 94 180 255;     /* #5eb4ff */
+    --accent-strong: 51 142 247;    /* #338ef7 links (5.4:1) */
+
+    --border: 39 39 42;             /* #27272a */
+    --border-strong: 82 82 91;      /* #52525b */
+    --border-subtle: 39 39 42;      /* #27272a row dividers */
+
+    --text-primary: 250 250 250;    /* #fafafa */
+    --text-secondary: 161 161 170;  /* #a1a1aa */
+    --text-tertiary: 144 144 153;   /* #909099 (5.6:1; the old #71717a was 3.7:1) */
+    --text-disabled: 82 82 91;      /* #52525b */
+
+    --success: 23 201 100;          /* #17c964 */
+    --warning: 245 165 36;          /* #f5a524 */
+    --danger: 245 87 127;           /* #f5577f (5.5:1) */
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -14,24 +69,27 @@
   }
 
   body {
-    background-color: #09090b;
-    color: #fafafa;
+    background-color: rgb(var(--canvas-soft));
+    color: rgb(var(--text-primary));
     font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
+  h1, h2, h3 {
+    letter-spacing: -0.015em;
+  }
+
   /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #09090b; }
-  ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgb(var(--border-strong)); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--text-disabled)); }
 }
 
 @layer utilities {
   .mono { font-family: "JetBrains Mono", "Fira Code", monospace; }
-  .text-link { color: #338EF7; }
-  .truncate-url { 
-    max-width: 280px;
+  .truncate-url {
+    max-width: 360px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

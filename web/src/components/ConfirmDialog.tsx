@@ -1,4 +1,5 @@
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
+import { modalClassNames, secondaryButtonClass } from "./styles";
 
 interface Props {
   isOpen: boolean;
@@ -14,24 +15,20 @@ export function ConfirmDialog({ isOpen, onClose, onConfirm, title, description, 
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      classNames={{
-        base: "bg-surface-elevated border border-border",
-        header: "text-text-primary border-b border-border",
-        body: "text-text-secondary",
-        footer: "border-t border-border",
-      }}
+      classNames={modalClassNames}
     >
       <ModalContent>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody>
-          <p className="text-sm">{description}</p>
+          <p className="text-[15px] leading-relaxed">{description}</p>
         </ModalBody>
         <ModalFooter>
-          <Button variant="light" className="text-text-secondary" onPress={onClose}>
+          <Button className={secondaryButtonClass} onPress={onClose}>
             Cancel
           </Button>
           <Button
             color="danger"
+            className="font-medium"
             onPress={onConfirm}
             isLoading={loading}
           >

@@ -23,63 +23,37 @@ function isExpired(expiresAt: unknown): boolean {
   return new Date(s) < new Date();
 }
 
-export function StatusChip({ url }: { url: URL }) {
-  if (!url.active) {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-raised text-[#52525b] border border-[#52525b]">
-        Inactive
-      </span>
-    );
-  }
-  if (isExpired(url.expires_at)) {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border" style={{ background: "rgba(243,18,96,0.12)", color: "#f31260", borderColor: "#f31260" }}>
-        Expired
-      </span>
-    );
-  }
-  if (isExpiringSoon(url.expires_at)) {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border" style={{ background: "rgba(245,165,36,0.12)", color: "#f5a524", borderColor: "#f5a524" }}>
-        Expiring Soon
-      </span>
-    );
-  }
+type Tone = "neutral" | "success" | "warning" | "danger" | "accent";
+
+const TONE_CLASS: Record<Tone, string> = {
+  neutral: "bg-surface-raised text-text-secondary border-border",
+  success: "bg-success/10 text-success border-success/25",
+  warning: "bg-warning/10 text-warning border-warning/25",
+  danger: "bg-danger/10 text-danger border-danger/25",
+  accent: "bg-accent-subtle text-accent-strong border-accent/30",
+};
+
+function Chip({ tone, children }: { tone: Tone; children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border" style={{ background: "rgba(23,201,100,0.12)", color: "#17c964", borderColor: "#17c964" }}>
-      Active
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border whitespace-nowrap ${TONE_CLASS[tone]}`}>
+      {children}
     </span>
   );
+}
+
+export function StatusChip({ url }: { url: URL }) {
+  if (!url.active) return <Chip tone="neutral">Inactive</Chip>;
+  if (isExpired(url.expires_at)) return <Chip tone="danger">Expired</Chip>;
+  if (isExpiringSoon(url.expires_at)) return <Chip tone="warning">Expiring Soon</Chip>;
+  return <Chip tone="success">Active</Chip>;
 }
 
 export function RoleChip({ role }: { role: string }) {
-  if (role === "admin") {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border" style={{ background: "rgba(0,111,238,0.12)", color: "#006FEE", borderColor: "#006FEE" }}>
-        Admin
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-raised text-text-secondary border border-border">
-      Member
-    </span>
-  );
+  return role === "admin" ? <Chip tone="accent">Admin</Chip> : <Chip tone="neutral">Member</Chip>;
 }
 
 export function WatchlistChip({ allowed }: { allowed: boolean }) {
-  if (allowed) {
-    return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border" style={{ background: "rgba(23,201,100,0.12)", color: "#17c964", borderColor: "#17c964" }}>
-        Allowed
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border" style={{ background: "rgba(243,18,96,0.12)", color: "#f31260", borderColor: "#f31260" }}>
-      Blocked
-    </span>
-  );
+  return allowed ? <Chip tone="success">Allowed</Chip> : <Chip tone="danger">Blocked</Chip>;
 }
 
 export function relativeTime(dateStr: string): string {
